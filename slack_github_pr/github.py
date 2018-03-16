@@ -3,21 +3,52 @@ import logging
 
 
 class GithubHandler(object):
-    def __init__(self, payload):
+    def __init__(self, event_type, payload):
+        self.event_type = event_type
         self.payload = payload
         self.action = self.payload.get('action')
         self.sender = self.payload.get('sender', {}).get('login')
-        self.to_notify = []
+        self.issue = self.payload.get('issue', {})
+        self.pull_request = self.payload.get('pull_request', {})
+        self.users = []
         self.message = None
 
     def handle(self):
         if self.action == 'review_requested':
             self.handle_review_requested()
-        return self.to_notify, self.message
+        elif self.action == 'synchronize':
+            self.handle_review_update('updated')
+        elif self.event_type == 'pull_request' and self.action == 'closed':
+            self.handle_review_update('closed')
+        elif self.event_type == 'issues' and self.action == 'closed':
+            self.handle_issue_update('closed')
+        elif self.event_type == 'issues' and self.action == 'assigned':
+            self.handle_issue_assigned()
+        elif self.event_type == 'issue_comment' and self.action == 'created':
+            self.handle_issue_update('commented on')
+        to_notify = set(user['login'] for user in self.users if user['login'] != self.sender)
+        return to_notify, self.message
 
     def handle_review_requested(self):
-        pull_request = self.payload['pull_request']
-        url = pull_request['html_url']
-        self.to_notify = [reviewer['login'] for reviewer in pull_request['requested_reviewers']]
-        self.message = "{} requested you to review PR #{}: {}".format(
-            self.sender, pull_request['number'], pull_request['html_url'])
+        self.users = [self.pull_request['requested_reviewer']]
+        self.message = "{} requested you to review PR #{}: {}. {}".format(
+            self.sender, self.pull_request['number'], self.pull_request['title'],
+            self.pull_request['html_url'])
+
+    def handle_review_update(self, update_type):
+        self.users = self.pull_request['requested_reviewers'] + [self.pull_request['user']]
+        self.message = "{} {} PR #{}: {}. {}".format(
+            self.sender, update_type, self.pull_request['number'],
+            self.pull_request['title'], self.pull_request['html_url'])
+
+    def handle_issue_assigned(self):
+        self.users = [self.payload['assignee']]
+        self.message = "{} assigned to you issue #{}: {}. {}".format(
+            self.sender, self.issue['number'], self.issue['title'], self.issue['html_url'])
+
+    def handle_issue_update(self, update_type):
+        object_type = 'PR' if 'pull_request' in self.issue else 'issue'
+        self.users = self.issue['assignees'] + [self.issue['user']]
+        self.message = "{} {} {} #{}: {}. {}".format(
+            self.sender, update_type, object_type, self.issue['number'],
+            self.issue['title'], self.issue['html_url'])

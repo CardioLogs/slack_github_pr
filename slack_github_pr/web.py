@@ -56,8 +56,8 @@ def handle_webhook():
         given_signature = request.headers.get('X-Hub-Signature', '').split('=')[-1]
         if not hmac.compare_digest(valid_signature, given_signature):
             abort(401)
-    to_notify, message = GithubHandler(request.get_json()).handle()
-    to_notify = ['pomier']
+    event_type = request.headers.get('X-GitHub-Event')
+    to_notify, message = GithubHandler(event_type, request.get_json()).handle()
     emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
     logging.info((message, emails))
     if emails and message:
