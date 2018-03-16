@@ -16,10 +16,12 @@ class GithubHandler(object):
     def handle(self):
         if self.action == 'review_requested':
             self.handle_review_requested()
+        elif self.event_type == 'pull_request_review' and self.action == 'submitted':
+            self.handle_review_submitted()
         elif self.action == 'synchronize':
-            self.handle_review_update('updated')
+            self.handle_pull_request_update('updated')
         elif self.event_type == 'pull_request' and self.action == 'closed':
-            self.handle_review_update('closed')
+            self.handle_pull_request_update('closed')
         elif self.event_type == 'issues' and self.action == 'closed':
             self.handle_issue_update('closed')
         elif self.event_type == 'issues' and self.action == 'assigned':
@@ -35,7 +37,14 @@ class GithubHandler(object):
             self.sender, self.pull_request['number'], self.pull_request['title'],
             self.pull_request['html_url'])
 
-    def handle_review_update(self, update_type):
+    def handle_review_submitted(self):
+        result = "requested changes on" if self.payload['review']['state'] == 'changes_requested' else 'approved'
+        self.users = self.pull_request['requested_reviewers'] + [self.pull_request['user']]
+        self.message = "{} {} PR #{}: {}. {}".format(
+            self.sender, result, self.pull_request['number'], self.pull_request['title'],
+            self.pull_request['html_url'])
+
+    def handle_pull_request_update(self, update_type):
         self.users = self.pull_request['requested_reviewers'] + [self.pull_request['user']]
         self.message = "{} {} PR #{}: {}. {}".format(
             self.sender, update_type, self.pull_request['number'],
