@@ -42,7 +42,7 @@ class Slack(object):
                 username=self.username,
             )
             if self.avatar:
-                params['icon_emoji'] = self.avatar
+                params['icon_url'] = self.avatar
             self.client.chat.post_message(**params)
             sent_names.append(name)
 
