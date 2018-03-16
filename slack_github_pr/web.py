@@ -27,11 +27,11 @@ slack = Slack(
 )
 
 
-@app.route('/switch', methods=['POST'])
+@app.route('/switch', methods=['GET'])
 def switch():
-    username = request.form.get('user_name')
-    token = request.form.get('token')
-    action = request.form.get('text')
+    username = request.args.get('user_name')
+    token = request.args.get('token')
+    action = request.args.get('text')
     if not action or action not in ['disable', 'enable']:
         action = 'enable'
     action = action.strip()
@@ -60,7 +60,7 @@ def handle_webhook():
     to_notify = ['pomier']
     emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
     logging.info((message, emails))
-    if emails:
+    if emails and message:
         slack.post_msg_to_users(message, emails=emails)
     return 'OK'
 
