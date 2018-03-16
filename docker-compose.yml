@@ -1,0 +1,9 @@
+version: "3.2"
+services:
+  slackbot:
+    build: .
+    command: python3 start_server.py 0.0.0.0 8008
+    volumes:
+      - .:/app
+    ports:
+      - "8008:8008"
