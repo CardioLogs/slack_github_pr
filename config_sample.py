@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-GITHUB_WEBHOOK_TOKEN = 'github_webhook_token'
-
 SLACK_AUTH_TOKEN = 'slack_auth_token'
 
 SLACK_COMMAND_TOKEN = 'slack_command_token'
 
 # Following settings are optional
+
+GITHUB_WEBHOOK_TOKEN = 'github_webhook_token'
 
 # How often to refresh your slack member list (in seconds)?
 SLACK_EMAIL_REFRESH_INTERVAL = 3600

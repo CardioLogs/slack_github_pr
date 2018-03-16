@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import base64
+import hashlib
+import hmac
 import logging
 import os
-import time
-import ujson as json
 
 from flask import request, abort
 
@@ -49,14 +50,18 @@ def switch():
 
 @app.route('/github-webhook', methods=['POST'])
 def handle_webhook():
-    payload = json.loads(request.get_json())
-    #if payload.get('hook', {}).get('config', {}).get('secret') != app.config['GITHUB_WEBHOOK_TOKEN']:
-    #    abort(401)
-    to_notify, message = GithubHandler(payload).handle()
+    if app.config.get('GITHUB_WEBHOOK_TOKEN'):
+        # Check validity of the webhook
+        valid_signature = hmac.new(app.config['GITHUB_WEBHOOK_TOKEN'], request.data, hashlib.sha1).hexdigest()
+        given_signature = request.headers.get('X-Hub-Signature', '').split('=')[-1]
+        if not hmac.compare_digest(valid_signature, given_signature):
+            abort(401)
+    to_notify, message = GithubHandler(request.get_json()).handle()
     to_notify = ['pomier']
     emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
     logging.info((message, emails))
-    slack.post_msg_to_users(message, emails=emails)
+    if emails:
+        slack.post_msg_to_users(message, emails=emails)
     return 'OK'
 
 
