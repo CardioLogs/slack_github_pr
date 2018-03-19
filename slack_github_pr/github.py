@@ -32,7 +32,7 @@ class GithubHandler(object):
         return to_notify, self.message
 
     def handle_review_requested(self):
-        self.users = [self.pull_request['requested_reviewer']]
+        self.users = [self.payload['requested_reviewer']]
         self.message = "{} requested you to review PR #{}: {}. {}".format(
             self.sender, self.pull_request['number'], self.pull_request['title'],
             self.pull_request['html_url'])
