@@ -38,7 +38,13 @@ class GithubHandler(object):
             self.pull_request['html_url'])
 
     def handle_review_submitted(self):
-        result = "requested changes on" if self.payload['review']['state'] == 'changes_requested' else 'approved'
+        state = self.payload['review']['state']
+        if state == "commented":
+            result = "commented on"
+        elif state == "changes_requested":
+            result = "requested changes on"
+        else:
+            result = "approved"
         self.users = self.pull_request['requested_reviewers'] + [self.pull_request['user']]
         self.message = "{} {} PR #{}: {}. {}".format(
             self.sender, result, self.pull_request['number'], self.pull_request['title'],
