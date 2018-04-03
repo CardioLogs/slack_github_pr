@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from . import app
+
 
 class GithubHandler(object):
     def __init__(self, event_type, payload):
@@ -14,6 +16,9 @@ class GithubHandler(object):
         self.message = None
 
     def handle(self):
+        if self.sender in app.config['GITHUB_IGNORED_USERS']:
+            # Ignore the current action
+            return [], ""
         if self.action == 'review_requested':
             self.handle_review_requested()
         elif self.event_type == 'pull_request_review' and self.action == 'submitted':

@@ -17,6 +17,10 @@ SLACK_BOT_ICON = 'https://ca.slack-edge.com/T04KUQ181-U9PGT7AV9-09b2b129b8e1-48'
 # Which file to record the disabled users?
 DISABLED_USERS_FILE = './disabled_users.txt'
 
+# Ignore the following GitHub usernames when they perform actions (useful for bot accounts)
+GITHUB_IGNORED_USERS = []
+
+# Mapping between GitHub usernames and user's email address used on Slack
 EMAILS = {
     'username': 'username@example.com',
 }
