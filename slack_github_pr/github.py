@@ -24,9 +24,9 @@ class GithubHandler(object):
             self.object = self.issue
 
     def build_message(self, action_desc):
-        self.message = "{} {} {} #{}: {}. {}".format(
-            self.sender, action_desc, self.object_type, self.object['number'],
-            self.object['title'], self.object['html_url'])
+        self.message = "{} {} {} {}#{}: {}. {}".format(
+            self.sender, action_desc, self.object_type, self.payload['repository']['name'],
+            self.object['number'], self.object['title'], self.object['html_url'])
 
     def handle(self):
         if self.object is None or self.sender in app.config['GITHUB_IGNORED_USERS']:
