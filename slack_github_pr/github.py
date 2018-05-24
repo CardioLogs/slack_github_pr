@@ -28,7 +28,7 @@ class GithubHandler(object):
         reviewers = self.object.get('requested_reviewers', [])
         if self.object_type == 'PR':
             response = requests.get(
-                self.object['_links']['self'] + '/reviews',
+                self.object['_links']['self']['href'] + '/reviews',
                 headers={'Authorization': 'token {}'.format(app.config['GITHUB_API_TOKEN'])}
             )
             if response.status_code == 200:
