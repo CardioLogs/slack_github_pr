@@ -5,6 +5,8 @@ SLACK_COMMAND_TOKEN = 'slack_command_token'
 
 # Following settings are optional
 
+GITHUB_API_TOKEN = 'github_api_token'
+
 GITHUB_WEBHOOK_TOKEN = b'github_webhook_token'
 
 # How often to refresh your slack member list (in seconds)?

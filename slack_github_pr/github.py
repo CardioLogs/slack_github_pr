@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import requests
 
 from . import app
 
@@ -23,8 +24,19 @@ class GithubHandler(object):
             self.object_type = 'issue'
             self.object = self.issue
 
+    def get_all_reviewers(self):
+        reviewers = self.object.get('requested_reviewers', [])
+        if self.object_type == 'PR':
+            response = requests.get(
+                self.object['_links']['self'] + '/reviews',
+                headers={'Authorization': 'token {}'.format(app.config['GITHUB_API_TOKEN'])}
+            )
+            if response.status_code == 200:
+                reviewers += [review['user'] for review in response.json()]
+        return reviewers
+
     def build_message(self, action_desc):
-        self.message = "{} {} {} {}#{}: {}. (<{}|Open>)".format(
+        self.message = "{} {} {} {}#{}: {} (<{}|Open>)".format(
             self.sender, action_desc, self.object_type, self.payload['repository']['name'],
             self.object['number'], self.object['title'], self.object['html_url'])
 
@@ -59,7 +71,7 @@ class GithubHandler(object):
 
     def handle_object_update(self, action_desc):
         self.users = [self.object['user']]
-        self.users += self.object.get('requested_reviewers', [])
+        self.users += self.get_all_reviewers()
         self.users += self.object.get('assignees', [])
         self.build_message(action_desc)
 
