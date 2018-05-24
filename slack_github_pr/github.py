@@ -24,7 +24,7 @@ class GithubHandler(object):
             self.object = self.issue
 
     def build_message(self, action_desc):
-        self.message = "{} {} {} {}#{}: {}. {}".format(
+        self.message = "{} {} {} {}#{}: {}. (<{}|Open>)".format(
             self.sender, action_desc, self.object_type, self.payload['repository']['name'],
             self.object['number'], self.object['title'], self.object['html_url'])
 
