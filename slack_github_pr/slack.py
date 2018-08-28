@@ -3,6 +3,7 @@
 import logging
 import os
 import time
+import ujson as json
 
 from slacker import Slacker
 
@@ -45,7 +46,7 @@ class Slack(object):
             if attachment is not None:
                 if self.avatar:
                     attachment['footer_icon'] = self.avatar
-                params['attachments'] = [attachment],
+                params['attachments'] = json.dumps([attachment]),
             if self.avatar:
                 params['icon_url'] = self.avatar
             self.client.chat.post_message(**params)
