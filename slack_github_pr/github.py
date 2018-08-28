@@ -51,7 +51,7 @@ class GithubHandler(object):
         return not compare['commits'][-1]['commit']['message'].startswith('Merge branch')
 
     def build_message(self, action_desc):
-        action_str = "{} {}".format(self.sender, action_desc)
+        action_str = "{} {}".format(self.sender_name, action_desc)
         title = "{} #{} {}".format(self.object_type, self.object['number'], self.object['title'])
         fallback = "{} {}".format(action_str, title)
         repo = self.payload.get('repository', {})

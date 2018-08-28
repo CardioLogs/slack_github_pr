@@ -43,6 +43,8 @@ class Slack(object):
             if msg is not None:
                 params['text'] = msg
             if attachment is not None:
+                if self.avatar:
+                    attachment['footer_icon'] = self.avatar
                 params['attachments'] = [attachment],
             if self.avatar:
                 params['icon_url'] = self.avatar
