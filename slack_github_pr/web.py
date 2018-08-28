@@ -61,7 +61,7 @@ def handle_webhook():
     emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
     logging.info((message, emails))
     if emails and message:
-        slack.post_msg_to_users(message, emails=emails)
+        slack.post_msg_to_users(attachment=message, emails=emails)
     return 'OK'
 
 
