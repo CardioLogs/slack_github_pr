@@ -24,16 +24,30 @@ class GithubHandler(object):
             self.object_type = 'issue'
             self.object = self.issue
 
+    def api_request(self, url):
+        response = requests.get(
+            url,
+            headers={'Authorization': 'token {}'.format(app.config['GITHUB_API_TOKEN'])}
+        )
+        return response.json() if response.status_code == 200 else None
+
     def get_all_reviewers(self):
         reviewers = self.object.get('requested_reviewers', [])
         if self.object_type == 'PR':
-            response = requests.get(
-                self.object['_links']['self']['href'] + '/reviews',
-                headers={'Authorization': 'token {}'.format(app.config['GITHUB_API_TOKEN'])}
-            )
-            if response.status_code == 200:
-                reviewers += [review['user'] for review in response.json()]
+            reviews = self.api_request(self.object['_links']['self']['href'] + '/reviews')
+            if reviews is not None:
+                reviewers += [review['user'] for review in reviews]
         return reviewers
+
+    def is_pr_update_relevant(self):
+        """Returns False if the PR update is just a merge"""
+        before = self.payload.get('before')
+        after = self.payload.get('after')
+        url = self.payload['repository']['compare_url'].format(base=before, head=after)
+        compare = self.api_request(url)
+        if compare is None or compare['behind_by'] > 0 or compare['total_commits'] == 0:
+            return True
+        return not commit['commits'][-1]['commit']['message'].startswith('Merge branch')
 
     def build_message(self, action_desc):
         self.message = "{} {} {} {}#{}: {} (<{}|Open>)".format(
@@ -49,7 +63,9 @@ class GithubHandler(object):
         elif self.event_type == 'pull_request_review' and self.action == 'submitted':
             self.handle_review_submitted()
         elif self.action == 'synchronize':
-            self.handle_object_update('updated')
+            # Ignore 'merge' updates
+            if self.is_pr_update_relevant():
+                self.handle_object_update('updated')
         elif self.event_type == 'pull_request' and self.action == 'closed':
             self.handle_object_update('closed')
         elif self.event_type == 'issues' and self.action == 'closed':
