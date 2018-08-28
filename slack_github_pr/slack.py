@@ -22,7 +22,7 @@ class Slack(object):
         self.username = username
         self.avatar = avatar
 
-    def post_msg_to_users(self, msg, names=None, emails=None):
+    def post_msg_to_users(self, msg=None, attachment=None, names=None, emails=None):
         self.check_refresh()
         names = names or []
         emails = emails or []
@@ -38,9 +38,12 @@ class Slack(object):
                 continue
             params = dict(
                 channel='@%s' % name,
-                text=msg,
                 username=self.username,
             )
+            if msg is not None:
+                params['text'] = msg
+            if attachment is not None:
+                params['attachments'] = [attachment],
             if self.avatar:
                 params['icon_url'] = self.avatar
             self.client.chat.post_message(**params)

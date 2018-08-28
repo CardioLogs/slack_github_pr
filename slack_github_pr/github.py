@@ -10,7 +10,8 @@ class GithubHandler(object):
         self.event_type = event_type
         self.payload = payload
         self.action = self.payload.get('action')
-        self.sender = self.payload.get('sender', {}).get('login')
+        self.sender = self.payload.get('sender', {})
+        self.sender_name = self.sender.get('login')
         self.issue = self.payload.get('issue', {})
         self.pull_request = self.payload.get('pull_request', {})
         self.object_type = 'PR' if 'pull_request' in self.issue else 'issue'
@@ -21,7 +22,7 @@ class GithubHandler(object):
             self.object_type = 'PR'
             self.object = self.pull_request
         elif self.issue:
-            self.object_type = 'issue'
+            self.object_type = 'Issue'
             self.object = self.issue
 
     def api_request(self, url):
@@ -50,12 +51,28 @@ class GithubHandler(object):
         return not compare['commits'][-1]['commit']['message'].startswith('Merge branch')
 
     def build_message(self, action_desc):
-        self.message = "{} {} {} {}#{}: {} (<{}|Open>)".format(
-            self.sender, action_desc, self.object_type, self.payload['repository']['name'],
-            self.object['number'], self.object['title'], self.object['html_url'])
+        action_str = "{} {}".format(self.sender, action_desc)
+        title = "{} #{} {}".format(self.object_type, self.object['number'], self.object['title'])
+        fallback = "{} {}".format(action_str, title)
+        repo = self.payload.get('repository', {})
+        footer = "<{}|{}>".format(repo.get('html_url'), repo.get('full_name'))
+        color = '#00b541'
+        if self.object.get('merged'):
+            color = '#8200c4'
+        elif self.object.get('state') == 'closed':
+            color = '#d6002b'
+        self.message = {
+            "fallback": fallback,
+            "color": color,
+            "author_name": action_str,
+            "author_icon": self.sender.get('avatar_url'),
+            "title": title,
+            "title_link": self.object['html_url'],
+            "footer": footer,
+        }
 
     def handle(self):
-        if self.object is None or self.sender in app.config['GITHUB_IGNORED_USERS']:
+        if self.object is None or self.sender_name in app.config['GITHUB_IGNORED_USERS']:
             # Ignore the current action
             return [], ""
         if self.action == 'review_requested':
@@ -74,8 +91,8 @@ class GithubHandler(object):
             self.handle_assigned()
         elif self.event_type == 'issue_comment' and self.action == 'created':
             self.handle_object_update('commented on')
-        to_notify = set(user['login'] for user in self.users if user['login'] != self.sender)
-        return to_notify, self.message
+        to_notify = set(user['login'] for user in self.users if user['login'] != self.sender_name)
+        return to_notify, self.attachment
 
     def handle_review_requested(self):
         self.users = [self.payload['requested_reviewer']]
