@@ -92,7 +92,7 @@ class GithubHandler(object):
         elif self.event_type == 'issue_comment' and self.action == 'created':
             self.handle_object_update('commented on')
         to_notify = set(user['login'] for user in self.users if user['login'] != self.sender_name)
-        return to_notify, self.attachment
+        return to_notify, self.message
 
     def handle_review_requested(self):
         self.users = [self.payload['requested_reviewer']]
