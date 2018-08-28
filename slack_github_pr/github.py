@@ -47,7 +47,7 @@ class GithubHandler(object):
         compare = self.api_request(url)
         if compare is None or compare['behind_by'] > 0 or compare['total_commits'] == 0:
             return True
-        return not commit['commits'][-1]['commit']['message'].startswith('Merge branch')
+        return not compare['commits'][-1]['commit']['message'].startswith('Merge branch')
 
     def build_message(self, action_desc):
         self.message = "{} {} {} {}#{}: {} (<{}|Open>)".format(
