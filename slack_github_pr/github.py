@@ -44,11 +44,13 @@ class GithubHandler(object):
         """Returns False if the PR update is just a merge"""
         before = self.payload.get('before')
         after = self.payload.get('after')
+        base_branch = self.pull_request['base']['ref']
         url = self.payload['repository']['compare_url'].format(base=before, head=after)
         compare = self.api_request(url)
         if compare is None or compare['behind_by'] > 0 or compare['total_commits'] == 0:
             return True
-        return not compare['commits'][-1]['commit']['message'].startswith('Merge branch')
+        merge_commit_name = "Merge branch '{}'".format(base_branch)
+        return not compare['commits'][-1]['commit']['message'].startswith(merge_commit_name)
 
     def build_message(self, action_desc):
         action_str = "{} {}".format(self.sender_name, action_desc)
