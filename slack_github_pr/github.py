@@ -94,8 +94,8 @@ class GithubHandler(object):
                 self.handle_object_update('updated')
         elif self.event_type == 'pull_request' and self.action == 'closed':
             self.handle_object_update('closed')
-        elif self.event_type == 'issues' and self.action == 'opened':
-            self.handle_mentions(self.issue)
+        elif self.event_type in ['issues', 'pull_request'] and self.action == 'opened':
+            self.handle_mentions(self.object)
         elif self.event_type == 'issues' and self.action == 'closed':
             self.handle_object_update('closed')
         elif self.action == 'assigned':
