@@ -70,7 +70,7 @@ class GithubHandler(object):
             color = '#8200c4'
         elif self.object.get('state') == 'closed':
             color = '#d6002b'
-        self.message = {
+        return {
             "fallback": fallback,
             "color": color,
             "author_name": action_str,
@@ -113,17 +113,17 @@ class GithubHandler(object):
 
     def handle_review_requested(self):
         self.users = [self.payload['requested_reviewer']]
-        self.build_message('requested you to review')
+        self.message = self.build_message('requested you to review')
 
     def handle_assigned(self):
         self.users = [self.payload['assignee']]
-        self.build_message('assigned to you')
+        self.message = self.build_message('assigned to you')
 
     def handle_object_update(self, action_desc):
         self.users = [self.object['user']]
         self.users += self.get_all_reviewers()
         self.users += self.object.get('assignees', [])
-        self.build_message(action_desc)
+        self.message = self.build_message(action_desc)
 
     def handle_review_submitted(self):
         state = self.payload['review']['state']
