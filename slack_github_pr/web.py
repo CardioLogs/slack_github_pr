@@ -57,11 +57,12 @@ def handle_webhook():
         if not hmac.compare_digest(valid_signature, given_signature):
             abort(401)
     event_type = request.headers.get('X-GitHub-Event')
-    to_notify, message = GithubHandler(event_type, request.get_json()).handle()
-    emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
-    logging.info((message, emails))
-    if emails and message:
-        slack.post_msg_to_users(attachment=message, emails=emails)
+    notifications = GithubHandler(event_type, request.get_json()).handle()
+    for to_notify, message in notifications:
+        emails = [app.config['EMAILS'][username] for username in to_notify if username in app.config['EMAILS']]
+        logging.info((message, emails))
+        if emails and message:
+            slack.post_msg_to_users(attachment=message, emails=emails)
     return 'OK'
 
 
